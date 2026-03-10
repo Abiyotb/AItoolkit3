@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Evidence Checklist • EAII AI Ethics Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="title">EAII AI Ethics Toolkit</div>
+        <div class="subtitle">Form: Stage‑Gate Evidence Checklist (Gate 0–3)</div>
+      </div>
+      <div class="btn-row" style="margin:0;">
+        <a class="btn" href="../index.html">Home</a>
+        <a class="btn" href="module-mveg.html">Module</a>
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav class="nav">
+      <h3>Navigate</h3>
+      <a href="../index.html">Home</a>
+      <a href="module-mveg.html">Module overview</a>
+      <a href="trigger-checklist.html">Trigger Checklist</a>
+      <a href="decision-record.html">Decision Record</a>
+      <a href="evidence-checklist.html">Evidence Checklist</a>
+      <a href="downloads.html">Downloads</a>
+
+      <hr class="hr" />
+      <h3>Quick actions</h3>
+      <button class="btn" id="btn-save" type="button">Save draft</button>
+      <button class="btn" id="btn-load" type="button">Load saved</button>
+      <button class="btn danger" id="btn-reset" type="button">Reset</button>
+      <button class="btn" id="btn-json" type="button">Download JSON</button>
+    </nav>
+
+    <main class="main">
+      <h1>Stage‑Gate Evidence Checklist</h1>
+      <p class="small">Tick the evidence artifacts that are complete for each gate. Attach documents or provide links to a controlled repository.</p>
+
+      <div class="card">
+        <h2 style="margin-top:0;">Project header (optional)</h2>
+        <div class="grid">
+          <div class="field">
+            <label for="projectName">Project name / ID</label>
+            <input id="projectName" type="text" />
+          </div>
+          <div class="field">
+            <label for="gateFocus">Gate focus</label>
+            <select id="gateFocus">
+              <option value="all">Show all gates</option>
+              <option value="gate0">Gate 0 only</option>
+              <option value="gate1">Gate 1 only</option>
+              <option value="gate2_3">Gate 2–3 only</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="btn-mark-required" type="button">Mark all applicable as complete (current view)</button>
+          <button class="btn" id="btn-clear-view" type="button">Clear completion (current view)</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <h2 style="margin-top:0;">Checklist</h2>
+        <div id="tableWrap"></div>
+        <div class="field" style="margin-top:12px;">
+          <label for="notes">Notes / links</label>
+          <textarea id="notes" placeholder="Optional"></textarea>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:14px;">
+        <strong>Tip</strong>
+        <div class="small">Use this checklist alongside the Approvals Log and Risk Register (see Downloads) to keep delivery auditable.</div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="footer">
+    <div>© <span id="year"></span> EAII (web packaging). Drafts are stored locally in your browser.</div>
+  </div>
+
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/site.js"></script>
+  <script src="../assets/js/mveg-data.js"></script>
+  <script src="../assets/js/evidence-checklist.js"></script>
+</body>
+</html>
