@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Decision Record • EAII AI Ethics Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="title">EAII AI Ethics Toolkit</div>
+        <div class="subtitle">Form: Ethics Gate Decision Record</div>
+      </div>
+      <div class="btn-row" style="margin:0;">
+        <a class="btn" href="../index.html">Home</a>
+        <a class="btn" href="module-mveg.html">Module</a>
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav class="nav">
+      <h3>Navigate</h3>
+      <a href="../index.html">Home</a>
+      <a href="module-mveg.html">Module overview</a>
+      <a href="trigger-checklist.html">Trigger Checklist</a>
+      <a href="decision-record.html">Decision Record</a>
+      <a href="evidence-checklist.html">Evidence Checklist</a>
+      <a href="downloads.html">Downloads</a>
+
+      <hr class="hr" />
+      <h3>Quick actions</h3>
+      <button class="btn" id="btn-save" type="button">Save draft</button>
+      <button class="btn" id="btn-load" type="button">Load saved</button>
+      <button class="btn danger" id="btn-reset" type="button">Reset</button>
+      <button class="btn" id="btn-json" type="button">Download JSON</button>
+    </nav>
+
+    <main class="main">
+      <h1>Ethics Gate Decision Record</h1>
+      <p class="small">Use this one‑page record to capture the decision at each gate (0–3). Store it in the project folder and register in the approvals log.</p>
+
+      <div class="callout" id="prefill" style="margin-top:12px;"></div>
+
+      <form id="form" class="form" autocomplete="off">
+        <div class="card">
+          <h2 style="margin-top:0;">Project details</h2>
+          <div class="grid">
+            <div class="field">
+              <label for="projectName">Project name / ID</label>
+              <input id="projectName" type="text" />
+            </div>
+            <div class="field">
+              <label for="owningAgency">Owning agency / department</label>
+              <input id="owningAgency" type="text" />
+            </div>
+          </div>
+          <div class="grid">
+            <div class="field">
+              <label for="projectLead">Project lead</label>
+              <input id="projectLead" type="text" />
+            </div>
+            <div class="field">
+              <label for="gate">Gate</label>
+              <select id="gate">
+                <option value="Gate 0">Gate 0 (Intake & Triage)</option>
+                <option value="Gate 1">Gate 1 (Data Readiness)</option>
+                <option value="Gate 2">Gate 2 (Model Readiness)</option>
+                <option value="Gate 3">Gate 3 (Deployment Readiness)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-top:0;">Decision</h2>
+          <div class="grid">
+            <div class="field">
+              <label for="lane">Assigned lane</label>
+              <select id="lane">
+                <option value="Lane 1">Lane 1 (Fast Track)</option>
+                <option value="Lane 2">Lane 2 (Standard Review)</option>
+                <option value="Lane 3">Lane 3 (Enhanced Review)</option>
+              </select>
+              <div class="small muted" id="laneHint"></div>
+            </div>
+            <div class="field">
+              <label for="decision">Decision</label>
+              <select id="decision">
+                <option value="Approve">Approve</option>
+                <option value="Approve with conditions">Approve with conditions</option>
+                <option value="Reject / Redesign">Reject / Redesign</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="keyRisks">Summary of key risks</label>
+            <textarea id="keyRisks" placeholder="Key risks, who is impacted, why it matters"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="conditions">Required mitigations / conditions</label>
+            <textarea id="conditions" placeholder="Controls, mitigations, conditions for approval, timelines"></textarea>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="owner">Accountable owner for conditions</label>
+              <input id="owner" type="text" placeholder="Name / role" />
+            </div>
+            <div class="field">
+              <label for="reviewDate">Review / expiry date</label>
+              <input id="reviewDate" type="date" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-top:0;">Required evidence artifacts attached</h2>
+          <p class="small">Tick what you have attached (or linked). You can also add a free‑text list.</p>
+          <div id="artifactList" class="form"></div>
+          <div class="field">
+            <label for="artifactNotes">Additional artifact notes / links</label>
+            <textarea id="artifactNotes" placeholder="Optional"></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-top:0;">Sign‑offs</h2>
+          <p class="small">Typed sign‑offs for the minimum roles. Replace/extend to match your governance structure.</p>
+          <div id="signoffTable"></div>
+        </div>
+
+      </form>
+
+      <div class="callout" style="margin-top:14px;">
+        <strong>Next step</strong>
+        <div class="small">Use the Evidence Checklist to track completion for Gate 0–3.</div>
+        <div class="btn-row">
+          <a class="btn primary" href="evidence-checklist.html">Go to Evidence Checklist</a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="footer">
+    <div>© <span id="year"></span> EAII (web packaging). Drafts are stored locally in your browser.</div>
+  </div>
+
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/site.js"></script>
+  <script src="../assets/js/mveg-data.js"></script>
+  <script src="../assets/js/decision-record.js"></script>
+</body>
+</html>

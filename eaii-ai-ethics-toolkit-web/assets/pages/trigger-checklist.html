@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trigger Checklist • EAII AI Ethics Toolkit</title>
+  <link rel="stylesheet" href="../assets/css/styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="title">EAII AI Ethics Toolkit</div>
+        <div class="subtitle">Form: Ethics Gate Trigger Checklist (Gate 0)</div>
+      </div>
+      <div class="btn-row" style="margin:0;">
+        <a class="btn" href="../index.html">Home</a>
+        <a class="btn" href="module-mveg.html">Module</a>
+        <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav class="nav">
+      <h3>Navigate</h3>
+      <a href="../index.html">Home</a>
+      <a href="module-mveg.html">Module overview</a>
+      <a href="trigger-checklist.html">Trigger Checklist</a>
+      <a href="decision-record.html">Decision Record</a>
+      <a href="evidence-checklist.html">Evidence Checklist</a>
+      <a href="downloads.html">Downloads</a>
+
+      <hr class="hr" />
+      <h3>Quick actions</h3>
+      <button class="btn" id="btn-save" type="button">Save draft</button>
+      <button class="btn" id="btn-load" type="button">Load saved</button>
+      <button class="btn danger" id="btn-reset" type="button">Reset</button>
+      <button class="btn" id="btn-json" type="button">Download JSON</button>
+      <button class="btn" id="btn-csv" type="button">Download CSV</button>
+    </nav>
+
+    <main class="main">
+      <h1>Ethics Gate Trigger Checklist</h1>
+      <p class="small">Complete this at <strong>Gate 0 (Intake & Triage)</strong> before any data access or procurement.</p>
+
+      <div class="kpi">
+        <div class="item">
+          <div class="value" id="lane">—</div>
+          <div class="label">Assigned lane</div>
+        </div>
+        <div class="item">
+          <div class="value" id="highYes">0</div>
+          <div class="label">High‑Risk triggers = YES</div>
+        </div>
+        <div class="item">
+          <div class="value" id="modYes">0</div>
+          <div class="label">Moderate‑Risk triggers = YES</div>
+        </div>
+      </div>
+
+      <div id="decisionRule" class="callout" style="margin-top:12px;"></div>
+
+      <form id="form" class="form" autocomplete="off">
+        <div class="card">
+          <h2 style="margin-top:0;">Project header (optional)</h2>
+          <div class="grid">
+            <div class="field">
+              <label for="projectName">Project name / ID</label>
+              <input id="projectName" name="projectName" type="text" placeholder="e.g., Health Claims Triage v0" />
+            </div>
+            <div class="field">
+              <label for="owningAgency">Owning agency / department</label>
+              <input id="owningAgency" name="owningAgency" type="text" placeholder="e.g., Ministry / Directorate" />
+            </div>
+          </div>
+          <div class="grid">
+            <div class="field">
+              <label for="projectLead">Project lead</label>
+              <input id="projectLead" name="projectLead" type="text" placeholder="Name" />
+            </div>
+            <div class="field">
+              <label for="dateCompleted">Date completed</label>
+              <input id="dateCompleted" name="dateCompleted" type="date" />
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-top:0;">High‑Risk triggers</h2>
+          <p class="small">If <strong>YES</strong> on any item → Lane 3 (Enhanced Review).</p>
+          <div id="highTriggers"></div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-top:0;">Moderate‑Risk triggers</h2>
+          <p class="small">If no High‑Risk YES and <strong>2 or more</strong> Moderate YES → Lane 2.</p>
+          <div id="moderateTriggers"></div>
+        </div>
+
+        <div class="card">
+          <h2 style="margin-top:0;">Notes</h2>
+          <p class="small">Use this area for additional context, mitigation ideas, and links to evidence (if any).</p>
+          <div class="field">
+            <label for="generalNotes">General notes</label>
+            <textarea id="generalNotes" name="generalNotes" placeholder="Optional"></textarea>
+          </div>
+        </div>
+
+      </form>
+
+      <div class="callout" style="margin-top:14px;">
+        <strong>Next step</strong>
+        <div class="small">
+          Open the <a href="decision-record.html">Decision Record</a> to capture the Gate 0 decision, conditions, and sign‑offs.
+          This page will pre‑fill the assigned lane when available.
+        </div>
+        <div class="btn-row">
+          <a class="btn primary" href="decision-record.html">Go to Decision Record</a>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="footer">
+    <div>© <span id="year"></span> EAII (web packaging). Drafts are stored locally in your browser.</div>
+  </div>
+
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/site.js"></script>
+  <script src="../assets/js/mveg-data.js"></script>
+  <script src="../assets/js/trigger-checklist.js"></script>
+</body>
+</html>
