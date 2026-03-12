@@ -1,113 +1,790 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EAII AI Ethics Toolkit (Web)</title>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CompStudy</title>
+
+  <!-- Tailwind via CDN (good for prototypes) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* tiny polish */
+    .card { @apply rounded-2xl bg-white shadow p-6; }
+  </style>
 </head>
-<body>
-  <header class="header">
-    <div class="header-inner">
-      <div class="brand">
-        <div class="title">EAII AI Ethics Toolkit</div>
-        <div class="subtitle">Web version • Minimum Viable Ethics Gate module</div>
-      </div>
-      <div class="badge">Offline-friendly • No backend required</div>
-    </div>
-  </header>
+<body class="bg-slate-50">
+  <div id="app" class="min-h-screen"></div>
 
-  <div class="container">
-    <nav class="nav">
-      <h3>Navigate</h3>
-      <a href="index.html">Home</a>
-      <a href="pages/module-mveg.html">Module: Minimum Viable Ethics Gate</a>
-      <a href="trigger-checklist.html">Form: Trigger Checklist</a>
-      <a href="pages/decision-record.html">Form: Decision Record</a>
-      <a href="pages/evidence-checklist.html">Form: Evidence Checklist</a>
-      <a href="pages/downloads.html">Downloads</a>
-    </nav>
+  <script type="module">
+    /**************************************************************
+     * CompStudy - Single index.html Prototype
+     * - Email/Password Auth + Reset Password Email
+     * - Profile Setup: grade 9-12 + unique username (usernames collection)
+     * - Friends-by-username: search + send request + accept
+     *
+     * IMPORTANT:
+     * 1) Replace FIREBASE_CONFIG with your project config.
+     * 2) In Firebase Console:
+     *    - Enable Auth: Email/Password
+     *    - Enable Firestore
+     *    - Apply security rules (provided near bottom in comment)
+     **************************************************************/
 
-    <main class="main">
-      <h1>Online (web) AI Ethics Toolkit</h1>
-      <p class="small">
-        This is a lightweight, static web toolkit that turns the <em>Minimum Viable Ethics Gate</em> module into interactive pages and templates.
-        It is designed to be hosted on any static web server (or opened locally).
-      </p>
+    // Firebase (modular) via CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail,
+      updateProfile,
+      signOut,
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 
-      <div class="callout" style="margin-top:12px;">
-        <strong>Important note</strong>
-        <div id="note" class="small">Loading…</div>
-      </div>
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      runTransaction,
+      serverTimestamp,
+      addDoc,
+      collection,
+      query,
+      where,
+      getDocs,
+      onSnapshot,
+      updateDoc,
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-      <div class="grid" style="margin-top:14px;">
-        <div class="card">
-          <h2 style="margin-top:0;">Start here: Gate 0 risk screening</h2>
-          <p class="small">Answer High‑Risk and Moderate‑Risk triggers. The site automatically assigns Lane 1–3 based on the decision rule.</p>
-          <div class="btn-row">
-            <a class="btn primary" href="pages/trigger-checklist.html">Open Trigger Checklist</a>
-            <a class="btn" href="pages/module-mveg.html#decision-rule">See the decision rule</a>
-          </div>
-        </div>
+    /********************* 1) CONFIG ******************************/
+    const FIREBASE_CONFIG = {
+      apiKey: "REPLACE_ME",
+      authDomain: "REPLACE_ME",
+      projectId: "REPLACE_ME",
+      // storageBucket not needed for this prototype
+      // messagingSenderId not needed
+      appId: "REPLACE_ME",
+    };
 
-        <div class="card">
-          <h2 style="margin-top:0;">Record approvals and conditions</h2>
-          <p class="small">Capture the decision, conditions, evidence attached, and sign‑offs. Save drafts to your browser and export JSON.</p>
-          <div class="btn-row">
-            <a class="btn primary" href="pages/decision-record.html">Open Decision Record</a>
-          </div>
-        </div>
+    const app = initializeApp(FIREBASE_CONFIG);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-        <div class="card">
-          <h2 style="margin-top:0;">Track stage‑gate evidence</h2>
-          <p class="small">Use a single evidence checklist across Gate 0–3 to make delivery auditable and repeatable.</p>
-          <div class="btn-row">
-            <a class="btn primary" href="pages/evidence-checklist.html">Open Evidence Checklist</a>
-          </div>
-        </div>
+    /********************* 2) STATE *******************************/
+    const App = {
+      user: null,
+      profile: null, // users/{uid}
+      unsubIncoming: null,
+      incomingRequests: [],
+      toast: { type: null, text: null }, // {type: 'ok'|'err', text}
+    };
 
-        <div class="card">
-          <h2 style="margin-top:0;">Download starter templates</h2>
-          <p class="small">CSV templates for approvals log, risk register, operational logs, and vendor due diligence.</p>
-          <div class="btn-row">
-            <a class="btn primary" href="pages/downloads.html">Open downloads</a>
-          </div>
-        </div>
-      </div>
+    const elApp = document.getElementById("app");
 
-      <hr class="hr" />
-
-      <h2>How to publish online</h2>
-      <ol class="small">
-        <li>Upload the folder to any static host (e.g., an internal web server, SharePoint static hosting, GitHub Pages, or an S3 bucket).</li>
-        <li>Share the <span class="inline code">index.html</span> link as the entry point.</li>
-        <li>Optional: configure single sign-on at the hosting layer if you need access control.</li>
-      </ol>
-
-      <div class="callout">
-        <strong>Data privacy note</strong>
-        <div class="small">
-          Forms save drafts to <span class="inline code">localStorage</span> in the user’s browser. No data is sent anywhere by this site.
-          If you add a backend later, ensure you apply your organization’s privacy and security requirements.
-        </div>
-      </div>
-
-    </main>
-  </div>
-
-  <div class="footer">
-    <div>© <span id="year"></span> EAII (web packaging). Built from the Minimum Viable Ethics Gate module v1.1.</div>
-  </div>
-
-  <script src="assets/js/utils.js"></script>
-  <script src="assets/js/site.js"></script>
-  <script src="assets/js/mveg-data.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if(window.MVEG_DATA){
-        document.getElementById('note').textContent = window.MVEG_DATA.note || '';
+    function setToast(type, text) {
+      App.toast = { type, text };
+      render();
+      if (text) {
+        setTimeout(() => {
+          // clear only if unchanged
+          if (App.toast.text === text) {
+            App.toast = { type: null, text: null };
+            render();
+          }
+        }, 3500);
       }
+    }
+
+    function route() {
+      // hash routes:
+      // #/login, #/register, #/reset, #/setup, #/friends, #/
+      const h = location.hash || "#/";
+      return h;
+    }
+
+    function go(hash) {
+      location.hash = hash;
+    }
+
+    /********************* 3) HELPERS *****************************/
+    function normalizeUsername(input) {
+      return input.trim().toLowerCase();
+    }
+
+    function validateUsername(input) {
+      const u = input.trim();
+      if (u.length < 3) return "Username must be at least 3 characters.";
+      if (u.length > 20) return "Username must be 20 characters or less.";
+      if (!/^[a-zA-Z0-9_]+$/.test(u)) return "Use only letters, numbers, and underscore (_).";
+      return null;
+    }
+
+    function humanAuthError(code) {
+      switch (code) {
+        case "auth/invalid-email": return "That email address is not valid.";
+        case "auth/user-not-found": return "No account found with that email.";
+        case "auth/wrong-password": return "Incorrect password.";
+        case "auth/too-many-requests": return "Too many attempts. Try again later.";
+        case "auth/email-already-in-use": return "This email is already registered. Try logging in.";
+        case "auth/weak-password": return "Password is too weak. Use at least 6 characters.";
+        default: return "Something went wrong. Please try again.";
+      }
+    }
+
+    function requireAuthOrRedirect() {
+      if (!App.user) {
+        go("#/login");
+        return false;
+      }
+      return true;
+    }
+
+    function requireProfileOrRedirect() {
+      if (!requireAuthOrRedirect()) return false;
+      if (!App.profile) {
+        go("#/setup");
+        return false;
+      }
+      return true;
+    }
+
+    async function loadProfile(uid) {
+      const snap = await getDoc(doc(db, "users", uid));
+      App.profile = snap.exists() ? snap.data() : null;
+    }
+
+    function mountIncomingRequestsListener() {
+      if (App.unsubIncoming) App.unsubIncoming();
+      App.incomingRequests = [];
+      if (!App.user) return;
+
+      const q = query(
+        collection(db, "friendRequests"),
+        where("toUid", "==", App.user.uid),
+        where("status", "==", "pending")
+      );
+
+      App.unsubIncoming = onSnapshot(q, (snap) => {
+        const items = [];
+        snap.forEach((d) => {
+          const data = d.data();
+          items.push({ id: d.id, ...data });
+        });
+        App.incomingRequests = items;
+        render();
+      });
+    }
+
+    /********************* 4) SERVICES ****************************/
+
+    // Auth
+    async function registerWithEmail({ email, password, displayName }) {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(cred.user, { displayName });
+      return cred;
+    }
+
+    async function loginWithEmail({ email, password }) {
+      return await signInWithEmailAndPassword(auth, email, password);
+    }
+
+    async function resetPasswordByEmail(email) {
+      await sendPasswordResetEmail(auth, email);
+    }
+
+    async function logout() {
+      await signOut(auth);
+    }
+
+    // Profile + username claim (unique)
+    async function claimUsernameAndCreateProfile({ uid, email, displayName, username, grade }) {
+      const usernameKey = normalizeUsername(username);
+
+      await runTransaction(db, async (tx) => {
+        const unameRef = doc(db, "usernames", usernameKey);
+        const unameSnap = await tx.get(unameRef);
+
+        if (unameSnap.exists()) throw new Error("USERNAME_TAKEN");
+
+        tx.set(unameRef, { uid, createdAt: serverTimestamp() });
+
+        const userRef = doc(db, "users", uid);
+        tx.set(userRef, {
+          uid,
+          email: email ?? null,
+          displayName: displayName ?? usernameKey,
+          username: usernameKey,
+          grade,
+          xp: 0,
+          weeklyXp: 0,
+          createdAt: serverTimestamp(),
+        });
+      });
+
+      await loadProfile(uid);
+    }
+
+    // Friends
+    async function findUserByUsername(username) {
+      const key = normalizeUsername(username);
+
+      const unameSnap = await getDoc(doc(db, "usernames", key));
+      if (!unameSnap.exists()) return null;
+
+      const uid = unameSnap.data().uid;
+      const userSnap = await getDoc(doc(db, "users", uid));
+      if (!userSnap.exists()) return null;
+
+      const data = userSnap.data();
+      return {
+        uid,
+        username: data.username,
+        displayName: data.displayName ?? data.username,
+        grade: data.grade,
+      };
+    }
+
+    async function sendFriendRequest({ fromUid, toUid }) {
+      if (fromUid === toUid) throw new Error("CANNOT_ADD_SELF");
+
+      const reqCol = collection(db, "friendRequests");
+      const q = query(
+        reqCol,
+        where("fromUid", "==", fromUid),
+        where("toUid", "==", toUid),
+        where("status", "==", "pending")
+      );
+      const existing = await getDocs(q);
+      if (!existing.empty) throw new Error("REQUEST_ALREADY_SENT");
+
+      await addDoc(reqCol, {
+        fromUid,
+        toUid,
+        status: "pending",
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    async function acceptFriendRequest({ requestId, fromUid, toUid }) {
+      await runTransaction(db, async (tx) => {
+        const reqRef = doc(db, "friendRequests", requestId);
+        const reqSnap = await tx.get(reqRef);
+        if (!reqSnap.exists()) throw new Error("REQUEST_NOT_FOUND");
+
+        const req = reqSnap.data();
+        if (req.status !== "pending") throw new Error("REQUEST_NOT_PENDING");
+        if (req.toUid !== toUid) throw new Error("NOT_RECEIVER");
+
+        tx.update(reqRef, { status: "accepted", respondedAt: serverTimestamp() });
+
+        const aRef = doc(db, "friends", toUid, "list", fromUid);
+        const bRef = doc(db, "friends", fromUid, "list", toUid);
+
+        tx.set(aRef, { friendUid: fromUid, addedAt: serverTimestamp() });
+        tx.set(bRef, { friendUid: toUid, addedAt: serverTimestamp() });
+      });
+    }
+
+    /********************* 5) UI RENDER ****************************/
+
+    function layout(innerHtml) {
+      const userChip = App.user
+        ? `<div class="text-sm text-slate-600">Signed in as <span class="font-semibold">${escapeHtml(App.user.email || "User")}</span></div>`
+        : "";
+
+      const nav = App.user
+        ? `
+          <div class="flex flex-wrap gap-2 mt-3">
+            <a class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50" href="#/">Home</a>
+            <a class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50" href="#/friends">Friends</a>
+            <a class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50" href="#/setup">Setup</a>
+            <button id="btnLogout" class="px-3 py-2 rounded-xl bg-black text-white hover:opacity-90">Logout</button>
+          </div>
+        `
+        : `
+          <div class="flex flex-wrap gap-2 mt-3">
+            <a class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50" href="#/login">Login</a>
+            <a class="px-3 py-2 rounded-xl border bg-white hover:bg-slate-50" href="#/register">Register</a>
+          </div>
+        `;
+
+      const toastHtml = App.toast.text
+        ? `
+          <div class="max-w-2xl mx-auto px-6 mt-4">
+            <div class="rounded-xl p-3 text-sm ${App.toast.type === "err" ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}">
+              ${escapeHtml(App.toast.text)}
+            </div>
+          </div>
+        `
+        : "";
+
+      return `
+        <div class="p-6">
+          <div class="max-w-2xl mx-auto">
+            <div class="rounded-2xl bg-white shadow p-6">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="text-2xl font-bold">CompStudy</div>
+                  <div class="text-sm text-slate-600">Make group study fun by competition.</div>
+                </div>
+                <div class="text-right">${userChip}</div>
+              </div>
+              ${nav}
+            </div>
+          </div>
+          ${toastHtml}
+          <div class="max-w-2xl mx-auto px-6 mt-6">
+            ${innerHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function pageHome() {
+      if (!requireProfileOrRedirect()) return "";
+
+      return layout(`
+        <div class="rounded-2xl bg-white shadow p-6">
+          <div class="text-xl font-bold">Dashboard</div>
+          <div class="text-sm text-slate-600 mt-1">
+            Welcome <span class="font-semibold">@${escapeHtml(App.profile.username)}</span> • Grade ${escapeHtml(String(App.profile.grade))}
+          </div>
+
+          <div class="mt-6 grid gap-3">
+            <a href="#/friends" class="rounded-xl border p-4 hover:bg-slate-50">
+              <div class="font-semibold">Friends</div>
+              <div class="text-sm text-slate-600">Add friends and compete.</div>
+            </a>
+            <div class="rounded-xl border p-4 opacity-70">
+              <div class="font-semibold">Next: Quizzes & Challenges</div>
+              <div class="text-sm text-slate-600">We’ll add quiz creation and friend challenges next.</div>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    function pageLogin() {
+      return layout(`
+        <div class="rounded-2xl bg-white shadow p-6">
+          <div class="text-xl font-bold">Login</div>
+          <form id="loginForm" class="mt-4 space-y-3">
+            <input class="w-full rounded-xl border p-3" name="email" type="email" placeholder="Email" required />
+            <input class="w-full rounded-xl border p-3" name="password" type="password" placeholder="Password" required />
+            <button class="w-full rounded-xl bg-black text-white p-3 hover:opacity-90" type="submit">Sign in</button>
+          </form>
+
+          <div class="mt-4 flex items-center justify-between text-sm">
+            <a class="underline text-slate-700" href="#/reset">Forgot password?</a>
+            <a class="underline text-slate-700" href="#/register">Create account</a>
+          </div>
+        </div>
+      `);
+    }
+
+    function pageRegister() {
+      return layout(`
+        <div class="rounded-2xl bg-white shadow p-6">
+          <div class="text-xl font-bold">Create account</div>
+          <form id="registerForm" class="mt-4 space-y-3">
+            <input class="w-full rounded-xl border p-3" name="displayName" placeholder="Your name" required />
+            <input class="w-full rounded-xl border p-3" name="email" type="email" placeholder="Email" required />
+            <input class="w-full rounded-xl border p-3" name="password" type="password" placeholder="Password (min 6 chars)" minlength="6" required />
+            <button class="w-full rounded-xl bg-black text-white p-3 hover:opacity-90" type="submit">Create account</button>
+          </form>
+
+          <div class="mt-4 text-sm">
+            <a class="underline text-slate-700" href="#/login">Back to login</a>
+          </div>
+        </div>
+      `);
+    }
+
+    function pageReset() {
+      return layout(`
+        <div class="rounded-2xl bg-white shadow p-6">
+          <div class="text-xl font-bold">Reset password</div>
+          <div class="text-sm text-slate-600 mt-1">Enter your email and we’ll send a reset link.</div>
+
+          <form id="resetForm" class="mt-4 space-y-3">
+            <input class="w-full rounded-xl border p-3" name="email" type="email" placeholder="Email" required />
+            <button class="w-full rounded-xl bg-black text-white p-3 hover:opacity-90" type="submit">Send reset email</button>
+          </form>
+
+          <div class="mt-4 text-sm">
+            <a class="underline text-slate-700" href="#/login">Back to login</a>
+          </div>
+        </div>
+      `);
+    }
+
+    function pageSetup() {
+      if (!requireAuthOrRedirect()) return "";
+
+      // If already has profile, show summary
+      if (App.profile) {
+        return layout(`
+          <div class="rounded-2xl bg-white shadow p-6">
+            <div class="text-xl font-bold">Profile</div>
+            <div class="mt-2 text-sm text-slate-600">
+              Username: <span class="font-semibold">@${escapeHtml(App.profile.username)}</span><br/>
+              Grade: <span class="font-semibold">${escapeHtml(String(App.profile.grade))}</span>
+            </div>
+            <div class="mt-5 text-sm text-slate-600">
+              Profile already set. If you want username changes later, we can add that feature (it requires releasing old username).
+            </div>
+          </div>
+        `);
+      }
+
+      return layout(`
+        <div class="rounded-2xl bg-white shadow p-6">
+          <div class="text-xl font-bold">Finish setup</div>
+          <div class="text-sm text-slate-600 mt-1">
+            Choose a username and grade to start competing.
+          </div>
+
+          <form id="setupForm" class="mt-4 space-y-3">
+            <div>
+              <label class="text-sm text-slate-600">Username</label>
+              <input class="w-full rounded-xl border p-3 mt-1" name="username" placeholder="e.g. abiyot_12" required />
+              <div class="text-xs text-slate-500 mt-1">Letters, numbers, underscore. 3–20 characters.</div>
+            </div>
+
+            <div>
+              <label class="text-sm text-slate-600">Grade</label>
+              <select class="w-full rounded-xl border p-3 mt-1" name="grade">
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+              </select>
+            </div>
+
+            <button class="w-full rounded-xl bg-black text-white p-3 hover:opacity-90" type="submit">
+              Save profile
+            </button>
+          </form>
+        </div>
+      `);
+    }
+
+    function pageFriends() {
+      if (!requireProfileOrRedirect()) return "";
+
+      const incomingHtml = (App.incomingRequests.length === 0)
+        ? `<div class="text-sm text-slate-600 mt-2">No pending requests.</div>`
+        : `
+          <div class="mt-3 space-y-2">
+            ${App.incomingRequests.map(r => `
+              <div class="rounded-xl border p-4 flex items-center justify-between gap-3">
+                <div class="text-sm">
+                  <div>Request from <span class="font-semibold">${escapeHtml(r.fromUid)}</span></div>
+                  <div class="text-xs text-slate-500">(Enhancement: fetch /users/{fromUid} to show username)</div>
+                </div>
+                <button data-accept="${escapeHtml(r.id)}" class="px-4 py-2 rounded-xl bg-black text-white hover:opacity-90">
+                  Accept
+                </button>
+              </div>
+            `).join("")}
+          </div>
+        `;
+
+      return layout(`
+        <div class="rounded-2xl bg-white shadow p-6">
+          <div class="text-xl font-bold">Friends</div>
+          <div class="text-sm text-slate-600 mt-1">Add friends by username to compete.</div>
+
+          <form id="friendSearchForm" class="mt-4 flex gap-2">
+            <input class="flex-1 rounded-xl border p-3" name="username" placeholder="Search username e.g. sara_10" required />
+            <button class="rounded-xl bg-black text-white px-4 hover:opacity-90" type="submit">Search</button>
+          </form>
+
+          <div id="friendSearchResult" class="mt-4"></div>
+        </div>
+
+        <div class="rounded-2xl bg-white shadow p-6 mt-6">
+          <div class="text-lg font-semibold">Incoming requests</div>
+          ${incomingHtml}
+        </div>
+      `);
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    /********************* 6) EVENTS ******************************/
+    function bindEvents() {
+      // Logout
+      const btnLogout = document.getElementById("btnLogout");
+      if (btnLogout) {
+        btnLogout.onclick = async () => {
+          try {
+            await logout();
+            setToast("ok", "Logged out.");
+            go("#/login");
+          } catch {
+            setToast("err", "Could not logout.");
+          }
+        };
+      }
+
+      // Login
+      const loginForm = document.getElementById("loginForm");
+      if (loginForm) {
+        loginForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(loginForm);
+          const email = String(fd.get("email") || "");
+          const password = String(fd.get("password") || "");
+          try {
+            await loginWithEmail({ email, password });
+            setToast("ok", "Logged in.");
+            // profile enforced in router
+            go("#/");
+          } catch (err) {
+            setToast("err", humanAuthError(err?.code));
+          }
+        };
+      }
+
+      // Register
+      const registerForm = document.getElementById("registerForm");
+      if (registerForm) {
+        registerForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(registerForm);
+          const displayName = String(fd.get("displayName") || "");
+          const email = String(fd.get("email") || "");
+          const password = String(fd.get("password") || "");
+          try {
+            await registerWithEmail({ displayName, email, password });
+            setToast("ok", "Account created. Please complete setup.");
+            go("#/setup");
+          } catch (err) {
+            setToast("err", humanAuthError(err?.code));
+          }
+        };
+      }
+
+      // Reset password
+      const resetForm = document.getElementById("resetForm");
+      if (resetForm) {
+        resetForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(resetForm);
+          const email = String(fd.get("email") || "");
+          try {
+            await resetPasswordByEmail(email.trim());
+            setToast("ok", "Reset email sent. Check inbox/spam.");
+            go("#/login");
+          } catch (err) {
+            setToast("err", humanAuthError(err?.code));
+          }
+        };
+      }
+
+      // Setup profile
+      const setupForm = document.getElementById("setupForm");
+      if (setupForm) {
+        setupForm.onsubmit = async (e) => {
+          e.preventDefault();
+          if (!App.user) return;
+
+          const fd = new FormData(setupForm);
+          const username = String(fd.get("username") || "");
+          const grade = Number(fd.get("grade") || "9");
+
+          const v = validateUsername(username);
+          if (v) return setToast("err", v);
+          if (![9,10,11,12].includes(grade)) return setToast("err", "Invalid grade.");
+
+          try {
+            await claimUsernameAndCreateProfile({
+              uid: App.user.uid,
+              email: App.user.email,
+              displayName: App.user.displayName,
+              username,
+              grade,
+            });
+            setToast("ok", "Profile saved.");
+            go("#/");
+          } catch (err) {
+            if (String(err?.message) === "USERNAME_TAKEN") setToast("err", "Username already taken. Try another.");
+            else setToast("err", "Could not save profile.");
+          }
+        };
+      }
+
+      // Friend search
+      const friendSearchForm = document.getElementById("friendSearchForm");
+      if (friendSearchForm) {
+        friendSearchForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const fd = new FormData(friendSearchForm);
+          const uname = String(fd.get("username") || "");
+          const resultEl = document.getElementById("friendSearchResult");
+          if (!resultEl) return;
+
+          resultEl.innerHTML = `<div class="text-sm text-slate-600">Searching...</div>`;
+          try {
+            const found = await findUserByUsername(uname);
+            if (!found) {
+              resultEl.innerHTML = `<div class="rounded-xl p-3 text-sm bg-red-50 text-red-700">No student found.</div>`;
+              return;
+            }
+
+            resultEl.innerHTML = `
+              <div class="rounded-xl border p-4 flex items-center justify-between gap-3">
+                <div>
+                  <div class="font-semibold">@${escapeHtml(found.username)}</div>
+                  <div class="text-sm text-slate-600">${escapeHtml(found.displayName)} • Grade ${escapeHtml(String(found.grade))}</div>
+                </div>
+                <button id="btnAddFriend" class="px-4 py-2 rounded-xl border hover:bg-slate-50">Add friend</button>
+              </div>
+            `;
+
+            const btn = document.getElementById("btnAddFriend");
+            btn.onclick = async () => {
+              try {
+                await sendFriendRequest({ fromUid: App.user.uid, toUid: found.uid });
+                setToast("ok", "Friend request sent!");
+              } catch (err) {
+                if (String(err?.message) === "CANNOT_ADD_SELF") setToast("err", "You can't add yourself.");
+                else if (String(err?.message) === "REQUEST_ALREADY_SENT") setToast("err", "Request already sent.");
+                else setToast("err", "Could not send request.");
+              }
+            };
+
+          } catch {
+            resultEl.innerHTML = `<div class="rounded-xl p-3 text-sm bg-red-50 text-red-700">Search failed.</div>`;
+          }
+        };
+      }
+
+      // Accept buttons
+      document.querySelectorAll("[data-accept]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const requestId = btn.getAttribute("data-accept");
+          const req = App.incomingRequests.find(r => r.id === requestId);
+          if (!req) return;
+
+          try {
+            await acceptFriendRequest({ requestId: req.id, fromUid: req.fromUid, toUid: App.user.uid });
+            setToast("ok", "Friend added!");
+          } catch {
+            setToast("err", "Could not accept request.");
+          }
+        });
+      });
+    }
+
+    /********************* 7) ROUTER ******************************/
+    async function render() {
+      const r = route();
+
+      // Basic route guarding (and UI)
+      if (r === "#/login") elApp.innerHTML = pageLogin();
+      else if (r === "#/register") elApp.innerHTML = pageRegister();
+      else if (r === "#/reset") elApp.innerHTML = pageReset();
+      else if (r === "#/setup") elApp.innerHTML = pageSetup();
+      else if (r === "#/friends") elApp.innerHTML = pageFriends();
+      else elApp.innerHTML = pageHome();
+
+      bindEvents();
+    }
+
+    window.addEventListener("hashchange", () => render());
+
+    /********************* 8) AUTH BOOT ***************************/
+    onAuthStateChanged(auth, async (user) => {
+      App.user = user;
+
+      if (user) {
+        await loadProfile(user.uid);
+        mountIncomingRequestsListener();
+      } else {
+        App.profile = null;
+        if (App.unsubIncoming) App.unsubIncoming();
+        App.unsubIncoming = null;
+        App.incomingRequests = [];
+      }
+
+      // If logged in but no profile, force setup unless already there
+      const r = route();
+      if (App.user && !App.profile && !["#/setup", "#/logout"].includes(r)) {
+        go("#/setup");
+        return;
+      }
+
+      // If not logged in, force login for protected pages
+      if (!App.user && ["#/", "#/friends", "#/setup"].includes(r)) {
+        go("#/login");
+        return;
+      }
+
+      render();
     });
+
+    // initial render
+    render();
+
+    /****************************************************************
+     * FIRESTORE SECURITY RULES (paste into Firebase Console -> Firestore Rules)
+     *
+     * rules_version = '2';
+     * service cloud.firestore {
+     *   match /databases/{database}/documents {
+     *
+     *     function signedIn() { return request.auth != null; }
+     *     function isMe(uid) { return signedIn() && request.auth.uid == uid; }
+     *
+     *     match /users/{uid} {
+     *       allow read: if signedIn();
+     *       allow create: if isMe(uid);
+     *       allow update: if isMe(uid);
+     *       allow delete: if false;
+     *     }
+     *
+     *     match /usernames/{username} {
+     *       allow read: if signedIn();
+     *       allow create: if signedIn()
+     *         && !exists(/databases/$(database)/documents/usernames/$(username))
+     *         && request.resource.data.uid == request.auth.uid;
+     *       allow update, delete: if false;
+     *     }
+     *
+     *     match /friendRequests/{requestId} {
+     *       allow read: if signedIn() && (
+     *         resource.data.fromUid == request.auth.uid ||
+     *         resource.data.toUid == request.auth.uid
+     *       );
+     *
+     *       allow create: if signedIn()
+     *         && request.resource.data.fromUid == request.auth.uid
+     *         && request.resource.data.status == "pending";
+     *
+     *       allow update: if signedIn() && (resource.data.toUid == request.auth.uid);
+     *       allow delete: if false;
+     *     }
+     *
+     *     match /friends/{uid}/list/{friendUid} {
+     *       allow read: if signedIn() && (uid == request.auth.uid);
+     *       allow create: if signedIn() && (uid == request.auth.uid);
+     *       allow update, delete: if false;
+     *     }
+     *   }
+     * }
+     ****************************************************************/
   </script>
 </body>
 </html>
